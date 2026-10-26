@@ -1,0 +1,54 @@
+# Cau hinh cho Windhawk mod "XAML-Video-Injector"
+# Dan nguyen khoi nay vao tab Settings cua mod (che do Textual), roi bam Save.
+#
+# Sua startMenuVideoUrl thanh duong dan tuyet doi tren may cua ban,
+# hoac de nguyen duong dan nay neu ban clone repo ve D:\startmenu-live-bg
+
+- loop: true
+  $name: "Loop Video (Global)"
+
+- injectTaskbar: false
+  $name: "Taskbar: Enable Injection"
+- taskbarVideoUrl: ""
+  $name: "Taskbar: Video URL"
+- taskbarRate: 100
+  $name: "Taskbar: Playback Speed (100 = 1.0x)"
+- taskbarOpacity: 100
+  $name: "Taskbar: Opacity (0-100)"
+- taskbarZIndex: 1
+  $name: "Taskbar: Z-Index"
+- taskbarCornerRadius: 0
+  $name: "Taskbar: Corner Radius"
+- TaskbarHeight: 0
+  $name: "Taskbar: Reserved Height (0 for default)"
+
+- injectStartButton: false
+  $name: "Start Button: Enable Injection"
+- startButtonVideoUrl: ""
+  $name: "Start Button: Video URL"
+- startButtonRate: 100
+  $name: "Start Button: Playback Speed (100 = 1.0x)"
+- startButtonOpacity: 100
+  $name: "Start Button: Opacity (0-100)"
+- startButtonZIndex: 1
+  $name: "Start Button: Z-Index"
+- startButtonCornerRadius: 0
+  $name: "Start Button: Corner Radius"
+
+# >>> PHAN QUAN TRONG <<<
+- injectStartMenu: true
+  $name: "Start Menu: Enable Injection"
+- startMenuVideoUrl: "D:\\startmenu-live-bg\\media\\start-bg.mp4"
+  $name: "Start Menu: Video URL"
+- startMenuRate: 100
+  $name: "Start Menu: Playback Speed (100 = 1.0x)"
+- startMenuOpacity: 100
+  $name: "Start Menu: Opacity (0-100)"
+- startMenuZIndex: -1
+  $name: "Start Menu: Z-Index"
+- startMenuCornerRadius: 8
+  $name: "Start Menu: Corner Radius"
+
+- customInjections: []
+  $name: "Custom Injections"
+  $description: "Bo trong. Them XAML/WinUI 3 injection point o day neu can."
