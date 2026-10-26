@@ -25,9 +25,10 @@ docs/preview.png          anh xem truoc
 
 - Windows 11 (Start menu dùng XAML/WinUI — mod **không** chạy trên Windows 10)
 - [Windhawk](https://windhawk.net) đã cài
-- Mod **XAML-Video-Injector** — nguồn:
-  [bbmaster123/FWFU](https://github.com/bbmaster123/FWFU), thư mục
-  `Personal Windhawk Mods/XAML-Video-Injector.cpp`
+- Mod **XAML-Video-Injector** — có trên store:
+  <https://windhawk.net/mods/xaml-video-injector>
+  (mã nguồn: [bbmaster123/FWFU](https://github.com/bbmaster123/FWFU),
+  `Personal Windhawk Mods/XAML-Video-Injector.cpp`)
 
 ## Cài đặt
 
@@ -37,9 +38,10 @@ docs/preview.png          anh xem truoc
    git clone https://github.com/kh4i-dev/startmenu-live-bg.git D:\startmenu-live-bg
    ```
 
-2. Windhawk → **Mods** → cài `XAML-Video-Injector`.
-   Nếu store không có mod: **Create New Mod** → dán toàn bộ nội dung
-   `XAML-Video-Injector.cpp` từ repo FWFU → **Compile mod**.
+2. Windhawk → **Mods** → tìm `XAML-Video-Injector` → **Install**.
+   Bản dựng tay (nếu store đổi): Windhawk → **Create New Mod** → dán nội dung
+   [XAML-Video-Injector.cpp](https://raw.githubusercontent.com/bbmaster123/FWFU/refs/heads/main/Personal%20Windhawk%20Mods/XAML-Video-Injector.cpp)
+   → **Compile mod**.
 
 3. Mở mod → tab **Settings** → chuyển sang chế độ **Textual** → dán
    [`mod/settings.yaml`](mod/settings.yaml) → sửa đường dẫn cho khớp máy bạn:
