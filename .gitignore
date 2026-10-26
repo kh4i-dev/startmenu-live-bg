@@ -1,3 +1,4 @@
 .tools/
+.build/
 media/*.part
 *.log

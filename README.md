@@ -103,6 +103,34 @@ Bản 360p vẫn dùng tốt cho Start menu: bề ngang Start menu chỉ ~640 px
   phải tắt/bật lại mod.
 - Máy yếu: đặt `startMenuRate: 50` (phát 0.5×) hoặc dùng `-Width 640`.
 
+## Gỡ mod
+
+```powershell
+# chay trong PowerShell admin
+.\scripts\install-mod.ps1 -Uninstall
+```
+
+Xoá registry key, DLL, source rồi khởi động lại Windhawk. DLL còn bị
+`explorer.exe` giữ trong RAM thì phải đăng xuất/đăng nhập mới xoá được (vô hại).
+
+## Lưu ý: mod này xung đột với nền `ImageBrush`
+
+Nếu Start menu đã có nền kiểu
+[`Windows 11 Start Menu Styler`](https://windhawk.net/mods/windows-11-start-menu-styler)
+(`Background:=<ImageBrush ... ImageSource="https://..."/>`), thì hai thứ này
+**chồng lên nhau**: `ImageBrush` là nền đục phủ toàn bộ `Border#AcrylicBorder`,
+nên video nằm dưới không thấy được, mà `Grid` mà mod này chèn vào root của Start
+menu lại làm lệch/phá layout của menu.
+
+Chỉ nên dùng **một** trong hai:
+
+| | `ImageBrush` (Start Menu Styler) | mod này (video) |
+| --- | --- | --- |
+| Cách làm | 1 style XAML trỏ tới 1 URL ảnh/GIF | chèn `MediaPlayerElement` vào cây XAML |
+| Nguồn | URL công khai (raw GitHub) | file local hoặc URL |
+| Tải máy | rất nhẹ, ảnh tĩnh/GIF | giải mã video liên tục |
+| Rủi ro | gần như không | động vào layout Start menu |
+
 ## Bản quyền
 
 - Clip trong `media/` cắt từ video gốc trên YouTube — **bản quyền thuộc tác giả
