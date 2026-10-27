@@ -15,11 +15,19 @@ Clip 15 giây làm **nền động cho Start menu Windows 11**, chạy bằng mo
 ## Repo này có gì
 
 ```
-media/start-bg.mp4        clip 15 giay de dua vao Windhawk
-mod/settings.yaml         cau hinh dan thang vao tab Settings cua mod
-scripts/make-clip.ps1     script tai + cat (tu lo yt-dlp / ffmpeg)
-docs/preview.png          anh xem truoc
+media/start-bg.mp4           clip 15 giay de dua vao Windhawk
+scripts/make-clip.ps1        tai + cat clip (tu lo yt-dlp / ffmpeg)
+scripts/install-mod.ps1      cai / go mod XAML-Video-Injector (co ban va layout)
+scripts/set-startmenu-bg.ps1 chon nen Start menu: video | image | show
+mod/settings.yaml            cau hinh tham khao cho tab Settings cua mod
+docs/preview.png             anh xem truoc
 ```
+
+`install-mod.ps1` làm đúng những gì giao diện Windhawk làm (Windhawk 1.7.3
+không có CLI): tải `.wh.cpp`, compile bằng `clang++.exe` của Windhawk với đúng
+tham số trong `compilerUtils.ts` (v1.7.3), copy DLL vào `Engine\Mods\64\`, ghi
+cấu hình vào `HKLM\SOFTWARE\Windhawk\Engine\Mods\<id>`, rồi khởi động lại
+Windhawk và Start menu.
 
 ## Yêu cầu
 
@@ -38,24 +46,34 @@ docs/preview.png          anh xem truoc
    git clone https://github.com/kh4i-dev/startmenu-live-bg.git D:\startmenu-live-bg
    ```
 
-2. Windhawk → **Mods** → tìm `XAML-Video-Injector` → **Install**.
-   Bản dựng tay (nếu store đổi): Windhawk → **Create New Mod** → dán nội dung
-   [XAML-Video-Injector.cpp](https://raw.githubusercontent.com/bbmaster123/FWFU/refs/heads/main/Personal%20Windhawk%20Mods/XAML-Video-Injector.cpp)
-   → **Compile mod**.
+2. Mở **PowerShell bằng quyền admin**, cài mod (tự tải nguồn, tự vá lỗi layout,
+   tự compile):
 
-3. Mở mod → tab **Settings** → chuyển sang chế độ **Textual** → dán
-   [`mod/settings.yaml`](mod/settings.yaml) → sửa đường dẫn cho khớp máy bạn:
-
-   ```yaml
-   - startMenuVideoUrl: "D:\\startmenu-live-bg\\media\\start-bg.mp4"
+   ```powershell
+   cd D:\startmenu-live-bg
+   .\scripts\install-mod.ps1 -VideoPath "D:\startmenu-live-bg\media\start-bg.mp4"
    ```
 
-   Trong YAML phải dùng `\\` cho dấu `\`.
+3. Chuyển nền Start menu sang video (gỡ `ImageBrush` của Start Menu Styler để
+   không chồng hai lớp):
 
-4. **Save settings** → **Exit mod** → **Enable mod** để nó nạp lại vào
-   `StartMenuExperienceHost.exe`.
+   ```powershell
+   .\scripts\set-startmenu-bg.ps1 -Mode video
+   ```
 
-5. Bấm phím Windows. Clip sẽ lặp phía sau các icon.
+4. Bấm phím Windows. Clip lặp phía sau các icon.
+
+Muốn quay lại nền ảnh/GIF từ repo wallpaper:
+
+```powershell
+.\scripts\set-startmenu-bg.ps1 -Mode image
+.\scripts\set-startmenu-bg.ps1 -Mode show     # xem dang dat gi
+```
+
+Hoặc cài bằng tay qua giao diện Windhawk: **Mods** → `XAML-Video-Injector` →
+Install → tab **Settings** → chế độ **Textual** → dán
+[`mod/settings.yaml`](mod/settings.yaml) (nhớ đổi `startMenuVideoUrl`, dùng `\\`
+cho dấu `\`). Cách này **không có bản vá layout** — xem mục dưới.
 
 > Không muốn dùng clip này? Dán URL của bạn vào `startMenuVideoUrl` — mod
 > nhận cả URL trực tiếp. Hoặc chạy script bên dưới để làm clip mới.
@@ -112,6 +130,36 @@ Bản 360p vẫn dùng tốt cho Start menu: bề ngang Start menu chỉ ~640 px
 
 Xoá registry key, DLL, source rồi khởi động lại Windhawk. DLL còn bị
 `explorer.exe` giữ trong RAM thì phải đăng xuất/đăng nhập mới xoá được (vô hại).
+
+## Lỗi layout của mod gốc và bản vá
+
+`XAML-Video-Injector` bản gốc làm **hỏng layout Start menu**: menu rộng ra và
+tràn khỏi màn hình.
+
+Trong `CreateAndInjectVideo()` (bản UWP — bản mà Start menu dùng) mod tạo một
+`Grid` rồi chèn vào `child[0]` của root Start menu, nhưng **không đặt
+`Width`/`Height`**:
+
+```cpp
+Grid videoContainer;
+videoContainer.HorizontalAlignment(Stretch);
+videoContainer.VerticalAlignment(Stretch);
+// ... khong co Width/Height
+targetGrid.Children().InsertAt(0, videoContainer);
+```
+
+`MediaPlayerElement` không có kích thước sẽ cộng **kích thước tự nhiên của video**
+(ở đây 1280×720) vào `DesiredSize` của Grid cha → Grid cha phình ra → Start menu
+rộng thêm rồi bị đẩy lệch và cắt cụt ở mép màn hình.
+
+`install-mod.ps1` tự vá khi cài: ghim `Width`/`Height` của cả container lẫn
+player theo `ActualWidth`/`ActualHeight` của ô chứa, và đồng bộ lại qua
+`SizeChanged`. Vá chỉ áp cho bản UWP; bản WinUI3 (`CreateAndInjectVideoWinUI3`)
+nằm sau và không được Start menu dùng tới, sửa vào sẽ sai namespace (`mux::`).
+
+Bản vá được áp bằng cách chèn code vào file nguồn **tải tại chỗ** (không kèm
+nguồn của tác giả trong repo này). Dùng `-NoLayoutPatch` nếu bạn muốn nguồn
+nguyên bản.
 
 ## Lưu ý: mod này xung đột với nền `ImageBrush`
 

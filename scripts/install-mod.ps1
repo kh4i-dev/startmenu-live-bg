@@ -41,6 +41,7 @@ param(
     [int]$CornerRadius = 8,
 
     [switch]$NoRestartStartMenu,
+    [switch]$NoLayoutPatch,
     [switch]$Uninstall
 )
 
@@ -49,6 +50,78 @@ $ErrorActionPreference = "Stop"
 function Write-Step($n, $msg) { Write-Host "[$n] $msg" -ForegroundColor Cyan }
 function Write-Ok($msg)       { Write-Host "    $msg" -ForegroundColor Green }
 function Write-Warn2($msg)    { Write-Host "    $msg" -ForegroundColor Yellow }
+
+<#
+  Va loi layout cua XAML-Video-Injector.
+
+  Trong CreateAndInjectVideo() (ban UWP, dung cho Start menu) mod tao mot Grid
+  roi chen vao child[0] cua root Start menu, NHUNG khong dat Width/Height.
+  MediaPlayerElement khong co kich thuoc se cong kich thuoc tu nhien cua video
+  (vi du 1280x720) vao desired size cua Grid cha => Start menu rong ra va tran
+  khoi man hinh.
+
+  Ban va ghim kich thuoc cua ca container lan player theo dung o chua, va dong
+  bo lai moi khi o chua doi kich thuoc.
+
+  Chi sua ban UWP: ban WinUI3 (CreateAndInjectVideoWinUI3) nam sau va khong
+  duoc Start menu dung toi, sua vao se sai namespace (mux::).
+#>
+function Repair-XamlVideoInjectorLayout {
+    param([string]$Source, [string]$Path)
+
+    if ($Source.Contains('[patch] Ghim kich thuoc')) {
+        Write-Ok "ban va layout: da co san, bo qua"
+        return $Source
+    }
+
+    $anchorA = "        videoContainer.Opacity(0);`n"
+    $anchorB = "        player.IsHitTestVisible(false);`n"
+
+    if (-not $Source.Contains($anchorA) -or -not $Source.Contains($anchorB)) {
+        Write-Warn2 "khong tim thay diem neo de va layout - mod da doi? Bo qua ban va."
+        return $Source
+    }
+
+    $patchA = @"
+        videoContainer.Opacity(0);
+
+        // [patch] Ghim kich thuoc vao dung o chua. MediaPlayerElement khong co
+        // Width/Height se cong kich thuoc tu nhien cua video (1280x720) vao
+        // desired size -> Grid cha phinh ra -> Start menu rong va tran man hinh.
+        const double fixedW = targetGrid.ActualWidth();
+        const double fixedH = targetGrid.ActualHeight();
+        if (fixedW > 0 && fixedH > 0) {
+            videoContainer.Width(fixedW);
+            videoContainer.Height(fixedH);
+        }
+"@
+
+    $patchB = @"
+        player.IsHitTestVisible(false);
+        if (fixedW > 0 && fixedH > 0) {
+            player.Width(fixedW);
+            player.Height(fixedH);
+            auto weakContainer = winrt::make_weak(videoContainer);
+            auto weakPlayer = winrt::make_weak(player);
+            targetGrid.SizeChanged([weakContainer, weakPlayer](
+                    auto const&, winrt::Windows::UI::Xaml::SizeChangedEventArgs const& args) {
+                auto const& sz = args.NewSize();
+                if (auto c = weakContainer.get()) { c.Width(sz.Width); c.Height(sz.Height); }
+                if (auto p = weakPlayer.get()) { p.Width(sz.Width); p.Height(sz.Height); }
+            });
+        }
+"@
+
+    # thay B truoc (nam sau A) de chi so cua A khong bi lech
+    $iB = $Source.IndexOf($anchorB)
+    $s2 = $Source.Substring(0, $iB) + $patchB + $Source.Substring($iB + $anchorB.Length)
+    $iA = $s2.IndexOf($anchorA)
+    $patched = $s2.Substring(0, $iA) + $patchA + $s2.Substring($iA + $anchorA.Length)
+
+    Set-Content $Path -Value $patched -NoNewline
+    Write-Ok "ban va layout: da ghim kich thuoc video vao o chua"
+    return $patched
+}
 
 # ---------------------------------------------------------------- quyen admin
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -168,6 +241,10 @@ $compilerOpts = if ($meta['compilerOptions']) { $meta['compilerOptions'].Trim() 
 Write-Ok "id=$Id  version=$Version  arch=$arch"
 Write-Ok "include: $($includes -join ' | ')"
 
+if (-not $NoLayoutPatch -and $Id -eq "xaml-video-injector") {
+    $sourceText = Repair-XamlVideoInjectorLayout -Source $sourceText -Path $srcPath
+}
+
 # ---------------------------------------------------------------- 2. compile
 Write-Step 2 "Compile mod"
 if ($DllFile) {
@@ -190,14 +267,20 @@ else {
     $defines = @(
         '-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-D_WIN32_IE=0x0A00', '-DNTDDI_VERSION=0x0A000008'
     )
+    # Phai tinh truoc: trong array literal @(), bieu thuc
+    #   '-DWH_MOD_ID=L"' + $Id + '"'
+    # bi PowerShell tach thanh 3 phan tu rieng, clang se nhan 3 argument rac.
+    $defModId  = '-DWH_MOD_ID=L"' + $Id + '"'
+    $defModVer = '-DWH_MOD_VERSION=L"' + $Version + '"'
+
     $clangArgs = @(
         '-std=c++23', '-O2', '-shared',
         '-DUNICODE', '-D_UNICODE'
     ) + $defines + @(
         '-D__USE_MINGW_ANSI_STDIO=0',
         '-DWH_MOD',
-        '-DWH_MOD_ID=L"' + $Id + '"',
-        '-DWH_MOD_VERSION=L"' + $Version + '"',
+        $defModId,
+        $defModVer,
         $engineLib,
         '-x', 'c++', '-',
         '-include', 'windhawk_api.h',
