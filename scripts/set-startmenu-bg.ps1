@@ -34,7 +34,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$regKey = "HKLM:\SOFTWARE\Windhawk\Engine\Mods\$ModId\Settings"
+$regSub = "SOFTWARE\Windhawk\Engine\Mods\$ModId"
+$regKey = "HKLM:\$regSub\Settings"
 $backupDir = Join-Path $env:TEMP "startmenu-bg-backup"
 $backupFile = Join-Path $backupDir "controlStyles.json"
 
@@ -105,7 +106,13 @@ foreach ($idx in ($map.Keys | Sort-Object)) {
     $regName = if ($null -ne $slot) { "controlStyles[$idx].styles[$slot]" }
                else { "controlStyles[$idx].styles[$($map[$idx].styles.Keys.Count)]" }
 
-    Set-ItemProperty -Path $regKey -Name $regName -Value $newBackground -Type String -Force
+    # Dung API .NET: ten gia tri chua '[' ']' nen Set/Remove-ItemProperty -Name
+    # coi do la WILDCARD va co the khong ghi/khong xoa dung.
+    $k = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("$regSub\Settings", $true)
+    try {
+        $k.SetValue($regName, $newBackground, [Microsoft.Win32.RegistryValueKind]::String)
+    }
+    finally { $k.Close() }
     Write-Host "  $target  ->  $regName" -ForegroundColor Green
     $changed++
 }

@@ -18,7 +18,8 @@ Clip 15 giây làm **nền động cho Start menu Windows 11**, chạy bằng mo
 media/start-bg.mp4           clip 15 giay de dua vao Windhawk
 scripts/make-clip.ps1        tai + cat clip (tu lo yt-dlp / ffmpeg)
 scripts/install-mod.ps1      cai / go mod XAML-Video-Injector (co ban va layout)
-scripts/set-startmenu-bg.ps1 chon nen Start menu: video | image | show
+scripts/set-startmenu-bg.ps1   chon nen Start menu: video | image | show
+scripts/set-startmenu-hide.ps1 an bot khoi cua Start menu: pinned | apps | both
 mod/settings.yaml            cau hinh tham khao cho tab Settings cua mod
 docs/preview.png             anh xem truoc
 ```
@@ -130,6 +131,68 @@ Bản 360p vẫn dùng tốt cho Start menu: bề ngang Start menu chỉ ~640 px
 
 Xoá registry key, DLL, source rồi khởi động lại Windhawk. DLL còn bị
 `explorer.exe` giữ trong RAM thì phải đăng xuất/đăng nhập mới xoá được (vô hại).
+
+## Ẩn bớt khối của Start menu
+
+```powershell
+.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode hide   # bo muc Pinned (DA KIEM CHUNG)
+.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode show   # tra ve nguyen trang
+```
+
+Target của preset `pinned` lấy từ chính source của mod `Windows 11 Start Menu
+Styler` (không đoán):
+
+| Target | Ẩn cái gì |
+| --- | --- |
+| `StartMenu.PinnedList` | cả khối danh sách app ghim |
+| `Windows.UI.Xaml.Controls.TextBlock#PinnedListHeaderText` | chữ tiêu đề "Pinned" |
+
+### ⚠️ Đừng collapse bừa — đã làm sập Start menu một lần
+
+Lần đầu tôi thử ẩn cả khu vực app bằng `Grid#AllAppsRoot`,
+`GridView#AllAppsGrid`, `Grid#AllListHeading`. Kết quả: **`StartMenuExperienceHost.exe`
+crash liên tục**, bấm phím Windows không hiện gì. Event Viewer:
+
+```
+Faulting application name: StartMenuExperienceHost.exe
+Faulting module name: StartMenu.dll
+```
+
+Collapse một element mà XAML engine cần → ném exception lúc layout → tiến trình
+chết ngay khi mở. Vì vậy preset `apps` đã bị **vô hiệu hoá** trong script.
+
+Muốn ẩn khu vực app cho đúng thì phải soi **cây XAML sống** trước (ví dụ
+`UWPSpy` của m417z) để biết chính xác `Type#Name` nào tồn tại trong build này,
+rồi thêm **một** target, test ngay, và luôn để sẵn đường cứu:
+
+```powershell
+.\scripts\set-startmenu-hide.ps1 -Targets "<Type>#<Name>" -Mode hide
+```
+
+Tên element **khác nhau theo bản Windows**. Tra nhanh bằng cách trích bảng string
+UTF-16 của `StartDocked.dll` (gói `...StartMenuExperienceHost_cw5n1h2txyewy`) và
+`StartMenu.dll` (gói `MicrosoftWindows.Client.Core`) — build 25H2 có
+`PinnedList`, `AllAppsRoot`, `AllAppsGrid`, `AllAppsControl`, `CategoryControl`,
+`AllHeading`; tên nào không có trong bảng đó thì style không khớp gì (vô hại).
+
+## Cứu Start menu khi bị crash
+
+```powershell
+# chay trong PowerShell admin
+.\scripts\restore-startmenu.ps1 -Mode restore   # khoi phuc controlStyles tu backup
+.\scripts\restore-startmenu.ps1 -Mode disable   # tat han mod Styler (cuu cuoi)
+.\scripts\restore-startmenu.ps1 -Mode enable    # bat lai
+```
+
+Hai cái bẫy đã gặp, script đã xử lý:
+
+1. **Tên giá trị registry chứa `[` `]`** — PowerShell coi là **wildcard**, nên
+   `Remove-ItemProperty -Name 'controlStyles[7].target'` **không xoá được gì**
+   (thất bại im lặng; `[7]` bị hiểu là character class). Các script ở đây dùng
+   thẳng API .NET (`RegistryKey.SetValue/DeleteValue`).
+2. **Windhawk ghi đè lại settings từ bộ nhớ của nó** — sửa registry trong lúc
+   Windhawk đang chạy thì bị ghi ngược về giá trị cũ. Phải
+   `windhawk.exe -exit -wait` trước, sửa xong mới bật lại.
 
 ## Lỗi layout của mod gốc và bản vá
 
