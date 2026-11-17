@@ -1,85 +1,88 @@
 # startmenu-live-bg
 
-Clip 15 giây làm **nền động cho Start menu Windows 11**, chạy bằng mod
-[Windhawk](https://windhawk.net) `XAML-Video-Injector`.
+**English** | [Tiếng Việt](README.vi.md)
+
+A 15-second clip used as the **animated Windows 11 Start Menu background**, running
+through the [Windhawk](https://windhawk.net) mod `XAML-Video-Injector`.
 
 ![preview](docs/preview.png)
 
 | | |
 | --- | --- |
-| Nguồn | [`J0shA9J-4Nc`](https://www.youtube.com/watch?v=J0shA9J-4Nc) — *Rest... Let the storm pass*, kênh **Quest & Rest** |
-| Doạn cắt | `00:01:00` → `00:01:15` (15,00 s) |
-| Xuất ra | H.264, 1280×720, 24 fps, không tiếng, `+faststart`, ~2 MB |
+| Source | [`J0shA9J-4Nc`](https://www.youtube.com/watch?v=J0shA9J-4Nc) — *Rest... Let the storm pass*, channel **Quest & Rest** |
+| Segment | `00:01:00` → `00:01:15` (15.00 s) |
+| Export | H.264, 1280×720, 24 fps, no audio, `+faststart`, ~2 MB |
 | File | [`media/start-bg.mp4`](media/start-bg.mp4) |
 
-## Repo này có gì
+## What's in this repo
 
 ```
-media/start-bg.mp4           clip 15 giay de dua vao Windhawk
-scripts/make-clip.ps1        tai + cat clip (tu lo yt-dlp / ffmpeg)
-scripts/install-mod.ps1      cai / go mod XAML-Video-Injector (co ban va layout)
-scripts/set-startmenu-bg.ps1   chon nen Start menu: video | image | show
-scripts/set-startmenu-hide.ps1 an bot khoi cua Start menu: pinned | apps | both
-mod/settings.yaml            cau hinh tham khao cho tab Settings cua mod
-docs/preview.png             anh xem truoc
+media/start-bg.mp4             the 15-second clip to feed into Windhawk
+scripts/make-clip.ps1          download + cut a clip (wraps yt-dlp / ffmpeg)
+scripts/install-mod.ps1        install / remove the XAML-Video-Injector mod (with the layout patch)
+scripts/set-startmenu-bg.ps1   pick the Start menu background: video | image | show
+scripts/set-startmenu-hide.ps1 hide Start menu blocks: pinned | apps | both
+mod/settings.yaml              reference config for the mod's Settings tab
+docs/preview.png               preview image
 ```
 
-`install-mod.ps1` làm đúng những gì giao diện Windhawk làm (Windhawk 1.7.3
-không có CLI): tải `.wh.cpp`, compile bằng `clang++.exe` của Windhawk với đúng
-tham số trong `compilerUtils.ts` (v1.7.3), copy DLL vào `Engine\Mods\64\`, ghi
-cấu hình vào `HKLM\SOFTWARE\Windhawk\Engine\Mods\<id>`, rồi khởi động lại
-Windhawk và Start menu.
+`install-mod.ps1` does exactly what the Windhawk UI does (Windhawk 1.7.3 has no CLI):
+downloads the `.wh.cpp` source, compiles it with Windhawk's `clang++.exe` using the
+exact flags from `compilerUtils.ts` (v1.7.3), copies the DLL into
+`Engine\Mods\64\`, writes the config under
+`HKLM\SOFTWARE\Windhawk\Engine\Mods\<id>`, then restarts Windhawk and the Start menu.
 
-## Yêu cầu
+## Requirements
 
-- Windows 11 (Start menu dùng XAML/WinUI — mod **không** chạy trên Windows 10)
-- [Windhawk](https://windhawk.net) đã cài
-- Mod **XAML-Video-Injector** — có trên store:
+- Windows 11 (the Start menu uses XAML/WinUI — the mod does **not** work on Windows 10)
+- [Windhawk](https://windhawk.net) installed
+- The **XAML-Video-Injector** mod — available on the store:
   <https://windhawk.net/mods/xaml-video-injector>
-  (mã nguồn: [bbmaster123/FWFU](https://github.com/bbmaster123/FWFU),
+  (source: [bbmaster123/FWFU](https://github.com/bbmaster123/FWFU),
   `Personal Windhawk Mods/XAML-Video-Injector.cpp`)
 
-## Cài đặt
+## Setup
 
-1. Clone về một đường dẫn **cố định, không dấu**:
+1. Clone to a **fixed path without spaces or non-ASCII characters**:
 
    ```powershell
    git clone https://github.com/kh4i-dev/startmenu-live-bg.git D:\startmenu-live-bg
    ```
 
-2. Mở **PowerShell bằng quyền admin**, cài mod (tự tải nguồn, tự vá lỗi layout,
-   tự compile):
+2. Open **PowerShell as admin**, install the mod (downloads the source, applies the
+   layout patch, compiles — all automatic):
 
    ```powershell
    cd D:\startmenu-live-bg
    .\scripts\install-mod.ps1 -VideoPath "D:\startmenu-live-bg\media\start-bg.mp4"
    ```
 
-3. Chuyển nền Start menu sang video (gỡ `ImageBrush` của Start Menu Styler để
-   không chồng hai lớp):
+3. Switch the Start menu background to video (this removes the Start Menu Styler
+   `ImageBrush` so the two layers don't stack):
 
    ```powershell
    .\scripts\set-startmenu-bg.ps1 -Mode video
    ```
 
-4. Bấm phím Windows. Clip lặp phía sau các icon.
+4. Press the Windows key. The clip now loops behind the icons.
 
-Muốn quay lại nền ảnh/GIF từ repo wallpaper:
+To go back to a wallpaper image/GIF (e.g. from the wallpapers repo):
 
 ```powershell
 .\scripts\set-startmenu-bg.ps1 -Mode image
-.\scripts\set-startmenu-bg.ps1 -Mode show     # xem dang dat gi
+.\scripts\set-startmenu-bg.ps1 -Mode show     # show what is currently set
 ```
 
-Hoặc cài bằng tay qua giao diện Windhawk: **Mods** → `XAML-Video-Injector` →
-Install → tab **Settings** → chế độ **Textual** → dán
-[`mod/settings.yaml`](mod/settings.yaml) (nhớ đổi `startMenuVideoUrl`, dùng `\\`
-cho dấu `\`). Cách này **không có bản vá layout** — xem mục dưới.
+Or install manually through the Windhawk UI: **Mods** → `XAML-Video-Injector` →
+Install → **Settings** tab → **Textual** mode → paste
+[`mod/settings.yaml`](mod/settings.yaml) (remember to change `startMenuVideoUrl`,
+and use `\\` for backslashes). This way you **don't get the layout patch** — see
+the section below.
 
-> Không muốn dùng clip này? Dán URL của bạn vào `startMenuVideoUrl` — mod
-> nhận cả URL trực tiếp. Hoặc chạy script bên dưới để làm clip mới.
+> Don't want this particular clip? Paste any URL into `startMenuVideoUrl` — the mod
+> accepts direct URLs too. Or use the script below to make your own clip.
 
-## Tự làm lại clip
+## Making your own clip
 
 ```powershell
 cd D:\startmenu-live-bg
@@ -88,163 +91,170 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\make-clip.ps1 `
     -Start "00:01:00" -Duration 15
 ```
 
-Script tự tải `yt-dlp` + `ffmpeg` nếu máy chưa có, tải **đúng đoạn cần**
-(`--download-sections`) nên không phải kéo cả video 5 tiếng, rồi xuất H.264 CRF 18
-kèm `unsharp` nhẹ.
+The script downloads `yt-dlp` + `ffmpeg` if missing, and fetches **only the segment
+you need** (`--download-sections`) so you never pull the whole 5-hour video. Output
+is H.264 CRF 18 with a light `unsharp`.
 
-### Nếu YouTube chặn (bot-check / 429)
+### If YouTube blocks you (bot-check / 429)
 
-YouTube đang bật thử nghiệm **SABR-only** cho một số IP: client `web` không trả về
-link tải, chỉ còn `android` với bản 360p. Cách xử lý:
+YouTube is rolling out **SABR-only** for some IPs: the `web` client no longer
+returns download links, leaving only `android` at 360p. Workarounds:
 
 ```powershell
-# 1. doi client hoac them cookie trinh duyet da dang nhap YouTube
-.\scripts\make-clip.ps1 -Url "<url>" -Browser firefox     # net nhat
-.\scripts\make-clip.ps1 -Url "<url>" -Client default      # de yt-dlp tu chon
+# 1. switch client, or pass cookies from a logged-in browser
+.\scripts\make-clip.ps1 -Url "<url>" -Browser firefox     # best quality
+.\scripts\make-clip.ps1 -Url "<url>" -Client default      # let yt-dlp choose
 ```
 
-`--cookies-from-browser chrome` / `edge` **không chạy được** trên Chrome/Edge 127+
-vì App-Bound Encryption — yt-dlp báo `Failed to decrypt with DPAPI`. Dùng Firefox,
-hoặc export `cookies.txt` rồi thêm `--cookies`.
+`--cookies-from-browser chrome` / `edge` **does not work** on Chrome/Edge 127+
+because of App-Bound Encryption — yt-dlp reports `Failed to decrypt with DPAPI`.
+Use Firefox, or export a `cookies.txt` and add `--cookies`.
 
-Bản 360p vẫn dùng tốt cho Start menu: bề ngang Start menu chỉ ~640 px, và video
-được crop theo chiều dọc nên phần thừa hai bên đằng nào cũng bị cắt.
+The 360p output is still fine for the Start menu: the menu is only ~640 px wide,
+and the video gets cropped vertically anyway, so the sides are cut regardless.
 
-## Ghi chú kỹ thuật
+## Technical notes
 
-- **`startMenuZIndex: -1`** — đẩy video xuống dưới lớp XAML của Start menu. Để `0`
-  trở lên là video che mất icon và ô tìm kiếm.
-- **`startMenuOpacity: 100`** — theme Start menu có acrylic mờ thì hạ xuống 70–85
-  cho dễ đọc chữ.
-- **Không tiếng** (`-an`): mod cũng mute mặc định, và âm thanh Start menu gần như
-  luôn là ý tồi.
-- Mod chạy trong `StartMenuExperienceHost.exe`; sau khi **Windows Update** đôi khi
-  phải tắt/bật lại mod.
-- Máy yếu: đặt `startMenuRate: 50` (phát 0.5×) hoặc dùng `-Width 640`.
+- **`startMenuZIndex: -1`** — pushes the video below the Start menu's XAML layer.
+  `0` or higher makes the video cover the icons and the search box.
+- **`startMenuOpacity: 100`** — if your Start menu theme has acrylic blur, drop to
+  70–85 to keep text readable.
+- **No audio** (`-an`): the mod mutes by default anyway, and Start menu audio is
+  almost always a bad idea.
+- The mod runs inside `StartMenuExperienceHost.exe`; after a **Windows Update** you
+  sometimes have to toggle the mod off/on.
+- Low-end machine: set `startMenuRate: 50` (playback at 0.5×) or use `-Width 640`.
 
-## Gỡ mod
+## Uninstall
 
 ```powershell
-# chay trong PowerShell admin
+# run in an admin PowerShell
 .\scripts\install-mod.ps1 -Uninstall
 ```
 
-Xoá registry key, DLL, source rồi khởi động lại Windhawk. DLL còn bị
-`explorer.exe` giữ trong RAM thì phải đăng xuất/đăng nhập mới xoá được (vô hại).
+Removes the registry key, the DLL and the source, then restarts Windhawk. If
+`explorer.exe` still holds the DLL in memory you need to sign out/in before the
+file can be deleted (harmless).
 
-## Ẩn bớt khối của Start menu
+## Hiding parts of the Start menu
 
 ```powershell
-.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode hide   # bo muc Pinned (DA KIEM CHUNG)
-.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode show   # tra ve nguyen trang
+.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode hide   # remove the Pinned section (VERIFIED)
+.\scripts\set-startmenu-hide.ps1 -Preset pinned -Mode show   # restore
 ```
 
-Target của preset `pinned` lấy từ chính source của mod `Windows 11 Start Menu
-Styler` (không đoán):
+The `pinned` preset targets come straight from the source of the
+`Windows 11 Start Menu Styler` mod (no guessing):
 
-| Target | Ẩn cái gì |
+| Target | What it hides |
 | --- | --- |
-| `StartMenu.PinnedList` | cả khối danh sách app ghim |
-| `Windows.UI.Xaml.Controls.TextBlock#PinnedListHeaderText` | chữ tiêu đề "Pinned" |
+| `StartMenu.PinnedList` | the whole pinned-apps list |
+| `Windows.UI.Xaml.Controls.TextBlock#PinnedListHeaderText` | the "Pinned" header text |
 
-### ⚠️ Đừng collapse bừa — đã làm sập Start menu một lần
+### ⚠️ Don't collapse blindly — it crashed my Start menu once
 
-Lần đầu tôi thử ẩn cả khu vực app bằng `Grid#AllAppsRoot`,
-`GridView#AllAppsGrid`, `Grid#AllListHeading`. Kết quả: **`StartMenuExperienceHost.exe`
-crash liên tục**, bấm phím Windows không hiện gì. Event Viewer:
+My first attempt hid the all-apps area using `Grid#AllAppsRoot`,
+`GridView#AllAppsGrid`, `Grid#AllListHeading`. Result: **`StartMenuExperienceHost.exe`
+crashed in a loop** and the Windows key did nothing. Event Viewer:
 
 ```
 Faulting application name: StartMenuExperienceHost.exe
 Faulting module name: StartMenu.dll
 ```
 
-Collapse một element mà XAML engine cần → ném exception lúc layout → tiến trình
-chết ngay khi mở. Vì vậy preset `apps` đã bị **vô hiệu hoá** trong script.
+Collapsing an element the XAML engine needs throws an exception during layout, and
+the process dies the moment the menu opens. That's why the `apps` preset is
+**disabled** in the script.
 
-Muốn ẩn khu vực app cho đúng thì phải soi **cây XAML sống** trước (ví dụ
-`UWPSpy` của m417z) để biết chính xác `Type#Name` nào tồn tại trong build này,
-rồi thêm **một** target, test ngay, và luôn để sẵn đường cứu:
+To hide the all-apps area properly, inspect the **live XAML tree** first (e.g. with
+m417z's `UWPSpy`) to find the exact `Type#Name` that exists on your build, add
+**one** target, test immediately, and always keep an escape hatch ready:
 
 ```powershell
 .\scripts\set-startmenu-hide.ps1 -Targets "<Type>#<Name>" -Mode hide
 ```
 
-Tên element **khác nhau theo bản Windows**. Tra nhanh bằng cách trích bảng string
-UTF-16 của `StartDocked.dll` (gói `...StartMenuExperienceHost_cw5n1h2txyewy`) và
-`StartMenu.dll` (gói `MicrosoftWindows.Client.Core`) — build 25H2 có
-`PinnedList`, `AllAppsRoot`, `AllAppsGrid`, `AllAppsControl`, `CategoryControl`,
-`AllHeading`; tên nào không có trong bảng đó thì style không khớp gì (vô hại).
+Element names **differ between Windows builds**. To look them up quickly, dump the
+UTF-16 string tables of `StartDocked.dll` (package
+`...StartMenuExperienceHost_cw5n1h2txyewy`) and `StartMenu.dll` (package
+`MicrosoftWindows.Client.Core`) — build 25H2 contains `PinnedList`, `AllAppsRoot`,
+`AllAppsGrid`, `AllAppsControl`, `CategoryControl`, `AllHeading`; any name not in
+those tables simply won't match (harmless).
 
-## Cứu Start menu khi bị crash
+## Rescuing a crashed Start menu
 
 ```powershell
-# chay trong PowerShell admin
-.\scripts\restore-startmenu.ps1 -Mode restore   # khoi phuc controlStyles tu backup
-.\scripts\restore-startmenu.ps1 -Mode disable   # tat han mod Styler (cuu cuoi)
-.\scripts\restore-startmenu.ps1 -Mode enable    # bat lai
+# run in an admin PowerShell
+.\scripts\restore-startmenu.ps1 -Mode restore   # restore controlStyles from backup
+.\scripts\restore-startmenu.ps1 -Mode disable   # disable the Styler mod entirely (last resort)
+.\scripts\restore-startmenu.ps1 -Mode enable    # re-enable
 ```
 
-Hai cái bẫy đã gặp, script đã xử lý:
+Two traps the scripts already handle:
 
-1. **Tên giá trị registry chứa `[` `]`** — PowerShell coi là **wildcard**, nên
-   `Remove-ItemProperty -Name 'controlStyles[7].target'` **không xoá được gì**
-   (thất bại im lặng; `[7]` bị hiểu là character class). Các script ở đây dùng
-   thẳng API .NET (`RegistryKey.SetValue/DeleteValue`).
-2. **Windhawk ghi đè lại settings từ bộ nhớ của nó** — sửa registry trong lúc
-   Windhawk đang chạy thì bị ghi ngược về giá trị cũ. Phải
-   `windhawk.exe -exit -wait` trước, sửa xong mới bật lại.
+1. **Registry value names containing `[` `]`** — PowerShell treats them as
+   **wildcards**, so `Remove-ItemProperty -Name 'controlStyles[7].target'` silently
+   deletes nothing (`[7]` is parsed as a character class). The scripts here call the
+   .NET registry API (`RegistryKey.SetValue/DeleteValue`) directly.
+2. **Windhawk re-writes its settings from memory** — edit the registry while
+   Windhawk is running and your changes get overwritten. Run
+   `windhawk.exe -exit -wait` first, edit, then start Windhawk again.
 
-## Lỗi layout của mod gốc và bản vá
+## The upstream mod's layout bug and the patch
 
-`XAML-Video-Injector` bản gốc làm **hỏng layout Start menu**: menu rộng ra và
-tràn khỏi màn hình.
+Stock `XAML-Video-Injector` **breaks the Start menu layout**: the menu widens and
+overflows the screen.
 
-Trong `CreateAndInjectVideo()` (bản UWP — bản mà Start menu dùng) mod tạo một
-`Grid` rồi chèn vào `child[0]` của root Start menu, nhưng **không đặt
-`Width`/`Height`**:
+In `CreateAndInjectVideo()` (the UWP variant — the one the Start menu uses), the
+mod creates a `Grid` and inserts it at `child[0]` of the Start menu root, but
+**never sets `Width`/`Height`**:
 
 ```cpp
 Grid videoContainer;
 videoContainer.HorizontalAlignment(Stretch);
 videoContainer.VerticalAlignment(Stretch);
-// ... khong co Width/Height
+// ... no Width/Height
 targetGrid.Children().InsertAt(0, videoContainer);
 ```
 
-`MediaPlayerElement` không có kích thước sẽ cộng **kích thước tự nhiên của video**
-(ở đây 1280×720) vào `DesiredSize` của Grid cha → Grid cha phình ra → Start menu
-rộng thêm rồi bị đẩy lệch và cắt cụt ở mép màn hình.
+A `MediaPlayerElement` with no size contributes the **video's natural size** (here
+1280×720) to the parent Grid's `DesiredSize` → the parent Grid inflates → the Start
+menu grows wider, gets pushed off-center and clipped at the screen edge.
 
-`install-mod.ps1` tự vá khi cài: ghim `Width`/`Height` của cả container lẫn
-player theo `ActualWidth`/`ActualHeight` của ô chứa, và đồng bộ lại qua
-`SizeChanged`. Vá chỉ áp cho bản UWP; bản WinUI3 (`CreateAndInjectVideoWinUI3`)
-nằm sau và không được Start menu dùng tới, sửa vào sẽ sai namespace (`mux::`).
+`install-mod.ps1` patches this automatically on install: it pins the
+`Width`/`Height` of both the container and the player to the host cell's
+`ActualWidth`/`ActualHeight`, and keeps them in sync via `SizeChanged`. The patch
+applies only to the UWP variant; the WinUI3 variant (`CreateAndInjectVideoWinUI3`)
+comes later in the file and isn't used by the Start menu — touching it would break
+namespacing (`mux::`).
 
-Bản vá được áp bằng cách chèn code vào file nguồn **tải tại chỗ** (không kèm
-nguồn của tác giả trong repo này). Dùng `-NoLayoutPatch` nếu bạn muốn nguồn
-nguyên bản.
+The patch is applied by inserting code into the **locally downloaded** source (this
+repo does not include the author's source). Use `-NoLayoutPatch` if you want the
+unmodified original.
 
-## Lưu ý: mod này xung đột với nền `ImageBrush`
+## Note: this mod conflicts with `ImageBrush` backgrounds
 
-Nếu Start menu đã có nền kiểu
+If your Start menu already has a background set through
 [`Windows 11 Start Menu Styler`](https://windhawk.net/mods/windows-11-start-menu-styler)
-(`Background:=<ImageBrush ... ImageSource="https://..."/>`), thì hai thứ này
-**chồng lên nhau**: `ImageBrush` là nền đục phủ toàn bộ `Border#AcrylicBorder`,
-nên video nằm dưới không thấy được, mà `Grid` mà mod này chèn vào root của Start
-menu lại làm lệch/phá layout của menu.
+(`Background:=<ImageBrush ... ImageSource="https://..."/>`), the two **stack**:
+the `ImageBrush` is an opaque background covering the whole `Border#AcrylicBorder`,
+so the video underneath is invisible — while the `Grid` this mod inserts into the
+Start menu root still breaks the menu's layout.
 
-Chỉ nên dùng **một** trong hai:
+Use **one** of the two, not both:
 
-| | `ImageBrush` (Start Menu Styler) | mod này (video) |
+| | `ImageBrush` (Start Menu Styler) | this mod (video) |
 | --- | --- | --- |
-| Cách làm | 1 style XAML trỏ tới 1 URL ảnh/GIF | chèn `MediaPlayerElement` vào cây XAML |
-| Nguồn | URL công khai (raw GitHub) | file local hoặc URL |
-| Tải máy | rất nhẹ, ảnh tĩnh/GIF | giải mã video liên tục |
-| Rủi ro | gần như không | động vào layout Start menu |
+| How | 1 XAML style pointing to 1 image URL | inserts a `MediaPlayerElement` into the XAML tree |
+| Source | any public URL (raw GitHub) | local file or URL |
+| Cost | very light, static image/GIF | continuous video decoding |
+| Risk | almost none | touches the Start menu layout |
 
-## Bản quyền
+## Copyright
 
-- Clip trong `media/` cắt từ video gốc trên YouTube — **bản quyền thuộc tác giả
-  video gốc**. Repo chỉ lưu cho mục đích cá nhân, không phân phối lại.
-- Mod `XAML-Video-Injector` thuộc về bbmaster123 — xem repo gốc để biết giấy phép.
-- Script trong repo này: MIT.
+- The clip in `media/` is cut from a YouTube video — **copyright belongs to the
+  original author**. The repo keeps it for personal use only and does not
+  redistribute it.
+- The `XAML-Video-Injector` mod belongs to bbmaster123 — see the original repo for
+  its license.
+- The scripts in this repo: MIT.
